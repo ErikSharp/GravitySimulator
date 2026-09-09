@@ -4,6 +4,7 @@ import p5 from "p5";
 export class Ball implements drawable {
     readonly position: p5.Vector;
     private trail: p5.Vector[] = [];
+    private acceleration: p5.Vector;
 
     constructor(
         private p: p5,
@@ -16,19 +17,34 @@ export class Ball implements drawable {
         readonly fixed = false
     ) {
         this.position = p.createVector(x, y);
+        this.acceleration = p.createVector();
     }
 
-    update(attractor: Ball): void {
+    applyGravity(bodies: Ball[]): void {
         if (this.fixed) {
             return;
         }
 
-        const direction = p5.Vector.sub(attractor.position, this.position);
-        const distanceSquared = this.p.constrain(direction.magSq(), 400, 250000);
-        const acceleration = (0.2 * attractor.mass) / distanceSquared;
+        this.acceleration.set(0, 0);
+        bodies.forEach((other) => {
+            if (other === this) {
+                return;
+            }
 
-        direction.setMag(acceleration);
-        this.velocity.add(direction);
+            const direction = p5.Vector.sub(other.position, this.position);
+            const distanceSquared = this.p.constrain(direction.magSq(), 400, 250000);
+            const gravitationalAcceleration = (0.2 * other.mass) / distanceSquared;
+            direction.setMag(gravitationalAcceleration);
+            this.acceleration.add(direction);
+        });
+    }
+
+    move(): void {
+        if (this.fixed) {
+            return;
+        }
+
+        this.velocity.add(this.acceleration);
         this.position.add(this.velocity);
 
         this.trail.push(this.position.copy());
