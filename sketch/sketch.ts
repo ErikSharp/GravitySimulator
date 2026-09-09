@@ -20,15 +20,22 @@ const sketch = (p: p5) => {
     let launchStart: p5.Vector | undefined;
     let nextPowerUpFrame = 360;
 
-    const addOrbitingBody = (
-        radius: number,
-        speed: number,
-        size: number,
-        color: [number, number, number]
-    ) => {
-        const centerX = p.width / 2;
-        const centerY = p.height / 2;
-        bodies.push(new Ball(p, centerX + radius, centerY, p.createVector(0, -speed), size * size, size, color));
+    const spawnWave = () => {
+        const largestOrbit = Math.max(110, Math.min(p.width, p.height) * 0.45);
+        for (let index = 0; index < 20; index++) {
+            const orbitRadius = p.random(85, largestOrbit);
+            const angle = p.random(p.TWO_PI);
+            const size = p.random(4, 12);
+            const position = p5.Vector.fromAngle(angle).mult(orbitRadius).add(attractor.position);
+            const tangentialVelocity = p5.Vector.fromAngle(angle + p.HALF_PI)
+                .mult(Math.sqrt((0.2 * attractor.mass) / orbitRadius) * p.random(0.82, 1.18));
+            const color: [number, number, number] = [
+                p.floor(p.random(90, 256)),
+                p.floor(p.random(90, 256)),
+                p.floor(p.random(90, 256)),
+            ];
+            bodies.push(new Ball(p, position.x, position.y, tangentialVelocity, size * size, size, color));
+        }
     };
 
     p.setup = () => {
@@ -40,9 +47,7 @@ const sketch = (p: p5) => {
         p.frameRate(60);
 
         attractor = new Ball(p, p.width / 2, p.height / 2, p.createVector(), 2000, 26, [255, 204, 77], true);
-        addOrbitingBody(105, 2, 7, [87, 183, 255]);
-        addOrbitingBody(185, 1.48, 9, [255, 112, 112]);
-        addOrbitingBody(270, 1.22, 6, [161, 241, 157]);
+        spawnWave();
         ship = new Ship(p);
     };
 
@@ -90,6 +95,9 @@ const sketch = (p: p5) => {
 
     p.draw = () => {
         p.background(8, 12, 24);
+        if (bodies.length === 0) {
+            spawnWave();
+        }
         if (p.frameCount >= nextPowerUpFrame) {
             powerUps.push(new PowerUp(p));
             nextPowerUpFrame = p.frameCount + p.floor(p.random(420, 720));

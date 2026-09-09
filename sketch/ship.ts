@@ -69,7 +69,8 @@ export class Ship {
             this.fireCooldown = 10;
             const direction = p5.Vector.fromAngle(this.heading - this.p.HALF_PI);
             if (this.laserFrames > 0) {
-                return { projectiles: [], laser: new LaserBeam(this.p, this.position.copy(), direction) };
+                const laserStart = p5.Vector.add(this.position, direction.copy().mult(this.radius + 1));
+                return { projectiles: [], laser: new LaserBeam(this.p, laserStart, direction) };
             }
             const bulletPosition = p5.Vector.add(this.position, direction.copy().mult(this.radius + 4));
             const angles = this.spreadFrames > 0 ? [-0.24, 0, 0.24] : [0];

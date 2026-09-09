@@ -48,7 +48,6 @@ export class PowerUp {
             this.p.vertex(Math.cos(pointAngle) * pulse, Math.sin(pointAngle) * pulse);
         }
         this.p.endShape(this.p.CLOSE);
-        this.p.rotate(-(this.angle + this.p.frameCount * this.spin));
         this.p.noStroke();
         this.p.fill(255);
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
