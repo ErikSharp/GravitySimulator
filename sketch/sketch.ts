@@ -1,11 +1,9 @@
-// import * as p5 from "../node_modules/p5/lib/p5.js";
-import * as p5 from "p5/index";
+import p5 from "p5";
 // import { Ball } from "./ball.js";
 // import { drawable } from "./drawable.js";
 
 function sketch(p: p5) {
     p.setup = function() {
-        alert("hello");
         p.createCanvas(p.windowWidth, p.windowHeight);
         // drawables.push(new Ball());
 

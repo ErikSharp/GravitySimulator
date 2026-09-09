@@ -1,17 +1,17 @@
 import { drawable } from "./drawable.js";
-import { p5 } from "../node_modules/p5/lib/p5.js";
+import p5 from "p5";
 
 export class Ball implements drawable {
     position: p5.Vector;
     velocity: p5.Vector;
 
-    constructor() {
-        this.position = p5.createVector(windowWidth / 2, windowHeight / 2);
-        this.velocity = p5.createVector(1, 1);
+    constructor(private p: p5) {
+        this.position = p.createVector(p.windowWidth / 2, p.windowHeight / 2);
+        this.velocity = p.createVector(1, 1);
     }
 
     draw(): void {
-        p5.ellipseMode(CENTER);
+        this.p.ellipseMode(this.p.CENTER);
 
         // ballX += xVelocity;
         this.position = this.position.add(this.velocity);
@@ -24,6 +24,6 @@ export class Ball implements drawable {
         //     yVelocity *= -1;
         // }
 
-        p5.ellipse(this.position.x, this.position.y, 80, 80);
+        this.p.ellipse(this.position.x, this.position.y, 80, 80);
     }
 }
