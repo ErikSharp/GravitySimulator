@@ -22,12 +22,20 @@ export class LaserBeam {
     }
 
     draw(): void {
-        const alpha = (this.lifetime / 8) * 240;
-        this.p.stroke(108, 245, 255, alpha);
+        const fade = this.lifetime / 8;
+        this.p.blendMode(this.p.ADD);
+        this.p.stroke(0, 255, 80, fade * 20);
+        this.p.strokeWeight(20);
+        this.p.line(this.start.x, this.start.y, this.end.x, this.end.y);
+        this.p.stroke(0, 255, 80, fade * 65);
+        this.p.strokeWeight(11);
+        this.p.line(this.start.x, this.start.y, this.end.x, this.end.y);
+        this.p.stroke(0, 255, 80, fade * 190);
         this.p.strokeWeight(5);
         this.p.line(this.start.x, this.start.y, this.end.x, this.end.y);
-        this.p.stroke(255, 255, 255, alpha);
-        this.p.strokeWeight(1);
+        this.p.stroke(255, 255, 255, fade * 255);
+        this.p.strokeWeight(1.5);
         this.p.line(this.start.x, this.start.y, this.end.x, this.end.y);
+        this.p.blendMode(this.p.BLEND);
     }
 }
