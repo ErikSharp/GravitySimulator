@@ -1,9 +1,15 @@
 import p5 from "p5";
 import { Ball } from "./ball";
+import { Particle } from "./particle";
+import { Projectile } from "./projectile";
+import { Ship } from "./ship";
 
 const sketch = (p: p5) => {
     const bodies: Ball[] = [];
+    const particles: Particle[] = [];
+    const projectiles: Projectile[] = [];
     let attractor: Ball;
+    let ship: Ship;
     let launchStart: p5.Vector | undefined;
 
     const addOrbitingBody = (
@@ -26,6 +32,7 @@ const sketch = (p: p5) => {
         addOrbitingBody(105, 2, 7, [87, 183, 255]);
         addOrbitingBody(185, 1.48, 9, [255, 112, 112]);
         addOrbitingBody(270, 1.22, 6, [161, 241, 157]);
+        ship = new Ship(p);
     };
 
     p.mousePressed = () => {
@@ -54,8 +61,39 @@ const sketch = (p: p5) => {
         const allBodies = [attractor, ...bodies];
         bodies.forEach((body) => body.applyGravity(allBodies));
         bodies.forEach((body) => body.move());
+
+        const projectile = ship.update();
+        if (projectile) {
+            projectiles.push(projectile);
+        }
+
+        for (let index = bodies.length - 1; index >= 0; index--) {
+            const body = bodies[index];
+            const projectileIndex = projectiles.findIndex(
+                (shot) => p5.Vector.dist(shot.position, body.position) < body.radius + 3
+            );
+            const shipCollision = ship.collidesWith(body.position, body.radius);
+            if (projectileIndex >= 0 || shipCollision) {
+                if (projectileIndex >= 0) {
+                    projectiles.splice(projectileIndex, 1);
+                }
+                for (let particleIndex = 0; particleIndex < 100; particleIndex++) {
+                    particles.push(new Particle(p, body.position.copy()));
+                }
+                bodies.splice(index, 1);
+                if (shipCollision) {
+                    ship.respawn();
+                }
+            }
+        }
+
         attractor.draw();
         bodies.forEach((body) => body.draw());
+        ship.draw();
+        projectiles.splice(0, projectiles.length, ...projectiles.filter((shot) => shot.update()));
+        projectiles.forEach((shot) => shot.draw());
+        particles.splice(0, particles.length, ...particles.filter((particle) => particle.update()));
+        particles.forEach((particle) => particle.draw());
 
         if (launchStart) {
             p.stroke(255, 255, 255, 180);
@@ -68,7 +106,7 @@ const sketch = (p: p5) => {
         p.text("Gravity Simulator", 20, 32);
         p.textSize(13);
         p.fill(180);
-        p.text("Drag to launch a random body — size shows mass", 20, 54);
+        p.text("Arrows: steer · Space: fire · Drag: launch a random body", 20, 54);
     };
 };
 
