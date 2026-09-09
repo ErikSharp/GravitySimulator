@@ -51,6 +51,8 @@ export class Ball implements drawable {
 
         this.velocity.add(this.acceleration);
         this.position.add(this.velocity);
+        this.position.x = (this.position.x + this.p.width) % this.p.width;
+        this.position.y = (this.position.y + this.p.height) % this.p.height;
 
         this.trail.push(this.position.copy());
         if (this.trail.length > 90) {
