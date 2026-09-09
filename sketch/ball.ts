@@ -20,23 +20,28 @@ export class Ball implements drawable {
         this.acceleration = p.createVector();
     }
 
-    applyGravity(bodies: Ball[]): void {
+    resetGravity(): void {
         if (this.fixed) {
             return;
         }
 
         this.acceleration.set(0, 0);
-        bodies.forEach((other) => {
-            if (other === this) {
-                return;
-            }
+    }
 
-            const direction = p5.Vector.sub(other.position, this.position);
-            const distanceSquared = this.p.constrain(direction.magSq(), 400, 250000);
-            const gravitationalAcceleration = (0.2 * other.mass) / distanceSquared;
-            direction.setMag(gravitationalAcceleration);
-            this.acceleration.add(direction);
-        });
+    addGravityFrom(x: number, y: number, mass: number): void {
+        if (this.fixed) {
+            return;
+        }
+
+        const dx = x - this.position.x;
+        const dy = y - this.position.y;
+        const distanceSquared = this.p.constrain(dx * dx + dy * dy, 400, 250000);
+        const gravitationalAcceleration = (0.2 * mass) / distanceSquared;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > 0) {
+            this.acceleration.x += (dx / distance) * gravitationalAcceleration;
+            this.acceleration.y += (dy / distance) * gravitationalAcceleration;
+        }
     }
 
     move(): void {

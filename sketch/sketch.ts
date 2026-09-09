@@ -4,6 +4,7 @@ import { Particle } from "./particle";
 import { Projectile } from "./projectile";
 import { Ship } from "./ship";
 import { SoundEffects } from "./sound";
+import { BarnesHutTree } from "./barnes-hut";
 
 const sketch = (p: p5) => {
     const bodies: Ball[] = [];
@@ -83,8 +84,12 @@ const sketch = (p: p5) => {
 
     p.draw = () => {
         p.background(8, 12, 24);
-        const allBodies = [attractor, ...bodies];
-        bodies.forEach((body) => body.applyGravity(allBodies));
+        const gravityTree = new BarnesHutTree(bodies);
+        bodies.forEach((body) => {
+            body.resetGravity();
+            body.addGravityFrom(attractor.position.x, attractor.position.y, attractor.mass);
+            gravityTree.applyGravity(body);
+        });
         bodies.forEach((body) => body.move());
 
         if (ship.update()) {
