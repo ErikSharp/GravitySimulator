@@ -5,15 +5,20 @@ import { Projectile } from "./projectile";
 import { Ship } from "./ship";
 import { SoundEffects } from "./sound";
 import { BarnesHutTree } from "./barnes-hut";
+import { LaserBeam } from "./laser";
+import { PowerUp } from "./power-up";
 
 const sketch = (p: p5) => {
     const bodies: Ball[] = [];
     const particles: Particle[] = [];
     const projectiles: Projectile[] = [];
+    const powerUps: PowerUp[] = [];
+    const lasers: LaserBeam[] = [];
     const sounds = new SoundEffects();
     let attractor: Ball;
     let ship: Ship;
     let launchStart: p5.Vector | undefined;
+    let nextPowerUpFrame = 360;
 
     const addOrbitingBody = (
         radius: number,
@@ -48,9 +53,10 @@ const sketch = (p: p5) => {
     p.keyPressed = () => {
         sounds.unlock();
         if (p.keyCode === 32) {
-            const projectile = ship.shoot();
-            if (projectile) {
-                projectiles.push(projectile);
+            const shot = ship.shoot();
+            if (shot) {
+                projectiles.push(...shot.projectiles);
+                if (shot.laser) lasers.push(shot.laser);
                 sounds.fire();
             }
         }
@@ -84,6 +90,10 @@ const sketch = (p: p5) => {
 
     p.draw = () => {
         p.background(8, 12, 24);
+        if (p.frameCount >= nextPowerUpFrame) {
+            powerUps.push(new PowerUp(p));
+            nextPowerUpFrame = p.frameCount + p.floor(p.random(420, 720));
+        }
         const gravityTree = new BarnesHutTree(bodies);
         bodies.forEach((body) => {
             body.resetGravity();
@@ -92,8 +102,26 @@ const sketch = (p: p5) => {
         });
         bodies.forEach((body) => body.move());
 
-        if (ship.update()) {
+        const shipUpdate = ship.update();
+        if (shipUpdate.thrusting) {
             sounds.thrust();
+        }
+        if (shipUpdate.autoFire) {
+            const shot = ship.shoot();
+            if (shot) {
+                projectiles.push(...shot.projectiles);
+                if (shot.laser) lasers.push(shot.laser);
+                sounds.fire();
+            }
+        }
+
+        for (let index = powerUps.length - 1; index >= 0; index--) {
+            const powerUp = powerUps[index];
+            powerUp.update();
+            if (powerUp.collidesWith(ship.position, ship.radius)) {
+                ship.collect(powerUp.kind);
+                powerUps.splice(index, 1);
+            }
         }
 
         for (let index = bodies.length - 1; index >= 0; index--) {
@@ -101,8 +129,9 @@ const sketch = (p: p5) => {
             const projectileIndex = projectiles.findIndex(
                 (shot) => p5.Vector.dist(shot.position, body.position) < body.radius + 3
             );
+            const laserHit = lasers.some((laser) => laser.hits(body.position, body.radius));
             const shipCollision = ship.collidesWith(body.position, body.radius);
-            if (projectileIndex >= 0 || shipCollision) {
+            if (projectileIndex >= 0 || laserHit || shipCollision) {
                 if (projectileIndex >= 0) {
                     projectiles.splice(projectileIndex, 1);
                 }
@@ -119,9 +148,12 @@ const sketch = (p: p5) => {
 
         attractor.draw();
         bodies.forEach((body) => body.draw());
+        powerUps.forEach((powerUp) => powerUp.draw());
         ship.draw();
         projectiles.splice(0, projectiles.length, ...projectiles.filter((shot) => shot.update()));
         projectiles.forEach((shot) => shot.draw());
+        lasers.splice(0, lasers.length, ...lasers.filter((laser) => laser.update()));
+        lasers.forEach((laser) => laser.draw());
         particles.splice(0, particles.length, ...particles.filter((particle) => particle.update()));
         particles.forEach((particle) => particle.draw());
 
@@ -137,6 +169,11 @@ const sketch = (p: p5) => {
         p.textSize(13);
         p.fill(180);
         p.text("Arrows: steer · Space: fire · Drag: launch a random body", 20, 54);
+        const activePowerUps = ship.activePowerUps();
+        if (activePowerUps) {
+            p.fill(190, 245, 255);
+            p.text(`Power-ups: ${activePowerUps}`, 20, 76);
+        }
     };
 };
 

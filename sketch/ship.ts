@@ -1,5 +1,12 @@
 import p5 from "p5";
 import { Projectile } from "./projectile";
+import { LaserBeam } from "./laser";
+import { PowerUpKind } from "./power-up";
+
+export interface FireResult {
+    projectiles: Projectile[];
+    laser?: LaserBeam;
+}
 
 export class Ship {
     readonly radius = 12;
@@ -8,6 +15,9 @@ export class Ship {
     private heading = 0;
     private fireCooldown = 0;
     private invulnerability = 90;
+    private spreadFrames = 0;
+    private autoFrames = 0;
+    private laserFrames = 0;
 
     constructor(private p: p5) {
         this.position = p.createVector();
@@ -15,7 +25,7 @@ export class Ship {
         this.respawn();
     }
 
-    update(): boolean {
+    update(): { thrusting: boolean; autoFire: boolean } {
         let thrusting = false;
         if (this.p.keyIsDown(this.p.LEFT_ARROW)) {
             this.heading -= 0.08;
@@ -34,16 +44,41 @@ export class Ship {
         this.position.y = (this.position.y + this.p.height) % this.p.height;
         this.fireCooldown = Math.max(0, this.fireCooldown - 1);
         this.invulnerability = Math.max(0, this.invulnerability - 1);
-        return thrusting;
+        this.spreadFrames = Math.max(0, this.spreadFrames - 1);
+        this.autoFrames = Math.max(0, this.autoFrames - 1);
+        this.laserFrames = Math.max(0, this.laserFrames - 1);
+        return { thrusting, autoFire: this.autoFrames > 0 && this.fireCooldown === 0 };
     }
 
-    shoot(): Projectile | undefined {
+    collect(kind: PowerUpKind): void {
+        if (kind === "spread") this.spreadFrames = 720;
+        if (kind === "auto") this.autoFrames = 720;
+        if (kind === "laser") this.laserFrames = 720;
+    }
+
+    activePowerUps(): string {
+        const active: string[] = [];
+        if (this.spreadFrames > 0) active.push("S");
+        if (this.autoFrames > 0) active.push("M");
+        if (this.laserFrames > 0) active.push("L");
+        return active.join(" ");
+    }
+
+    shoot(): FireResult | undefined {
         if (this.fireCooldown === 0) {
             this.fireCooldown = 10;
             const direction = p5.Vector.fromAngle(this.heading - this.p.HALF_PI);
+            if (this.laserFrames > 0) {
+                return { projectiles: [], laser: new LaserBeam(this.p, this.position.copy(), direction) };
+            }
             const bulletPosition = p5.Vector.add(this.position, direction.copy().mult(this.radius + 4));
-            const bulletVelocity = p5.Vector.add(this.velocity, direction.mult(8));
-            return new Projectile(this.p, bulletPosition, bulletVelocity);
+            const angles = this.spreadFrames > 0 ? [-0.24, 0, 0.24] : [0];
+            return {
+                projectiles: angles.map((angle) => {
+                    const velocity = p5.Vector.add(this.velocity, direction.copy().rotate(angle).mult(8));
+                    return new Projectile(this.p, bulletPosition.copy(), velocity);
+                }),
+            };
         }
     }
 
