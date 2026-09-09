@@ -16,6 +16,20 @@ export class SoundEffects {
         this.tone("square", 660, 180, 0.09, 0.045);
     }
 
+    laser(): void {
+        this.tone("sine", 1200, 260, 0.16, 0.07);
+    }
+
+    powerUp(): void {
+        if (!this.context) {
+            return;
+        }
+        const now = this.context.currentTime;
+        [523, 659, 784].forEach((frequency, index) => {
+            this.note("square", frequency, now + index * 0.07, 0.12, 0.06);
+        });
+    }
+
     thrust(): void {
         if (!this.context || this.context.currentTime - this.lastThrustTime < 0.07) {
             return;

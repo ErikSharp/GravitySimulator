@@ -62,7 +62,8 @@ const sketch = (p: p5) => {
             if (shot) {
                 projectiles.push(...shot.projectiles);
                 if (shot.laser) lasers.push(shot.laser);
-                sounds.fire();
+                if (shot.laser) sounds.laser();
+                else sounds.fire();
             }
         }
 
@@ -119,7 +120,8 @@ const sketch = (p: p5) => {
             if (shot) {
                 projectiles.push(...shot.projectiles);
                 if (shot.laser) lasers.push(shot.laser);
-                sounds.fire();
+                if (shot.laser) sounds.laser();
+                else sounds.fire();
             }
         }
 
@@ -128,6 +130,7 @@ const sketch = (p: p5) => {
             powerUp.update();
             if (powerUp.collidesWith(ship.position, ship.radius)) {
                 ship.collect(powerUp.kind);
+                sounds.powerUp();
                 powerUps.splice(index, 1);
             }
         }

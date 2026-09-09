@@ -92,6 +92,9 @@ export class Ship {
         this.velocity.set(0, 0);
         this.heading = 0;
         this.invulnerability = 120;
+        this.spreadFrames = 0;
+        this.autoFrames = 0;
+        this.laserFrames = 0;
     }
 
     draw(): void {
