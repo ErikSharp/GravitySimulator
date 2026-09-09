@@ -3,11 +3,13 @@ import { Ball } from "./ball";
 import { Particle } from "./particle";
 import { Projectile } from "./projectile";
 import { Ship } from "./ship";
+import { SoundEffects } from "./sound";
 
 const sketch = (p: p5) => {
     const bodies: Ball[] = [];
     const particles: Particle[] = [];
     const projectiles: Projectile[] = [];
+    const sounds = new SoundEffects();
     let attractor: Ball;
     let ship: Ship;
     let launchStart: p5.Vector | undefined;
@@ -43,10 +45,12 @@ const sketch = (p: p5) => {
     };
 
     p.keyPressed = () => {
+        sounds.unlock();
         if (p.keyCode === 32) {
             const projectile = ship.shoot();
             if (projectile) {
                 projectiles.push(projectile);
+                sounds.fire();
             }
         }
 
@@ -56,6 +60,7 @@ const sketch = (p: p5) => {
     };
 
     p.mousePressed = () => {
+        sounds.unlock();
         launchStart = p.createVector(p.mouseX, p.mouseY);
     };
 
@@ -82,7 +87,9 @@ const sketch = (p: p5) => {
         bodies.forEach((body) => body.applyGravity(allBodies));
         bodies.forEach((body) => body.move());
 
-        ship.update();
+        if (ship.update()) {
+            sounds.thrust();
+        }
 
         for (let index = bodies.length - 1; index >= 0; index--) {
             const body = bodies[index];
@@ -97,6 +104,7 @@ const sketch = (p: p5) => {
                 for (let particleIndex = 0; particleIndex < 100; particleIndex++) {
                     particles.push(new Particle(p, body.position.copy()));
                 }
+                sounds.explosion();
                 bodies.splice(index, 1);
                 if (shipCollision) {
                     ship.respawn();

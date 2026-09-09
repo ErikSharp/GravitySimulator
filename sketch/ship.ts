@@ -15,7 +15,8 @@ export class Ship {
         this.respawn();
     }
 
-    update(): void {
+    update(): boolean {
+        let thrusting = false;
         if (this.p.keyIsDown(this.p.LEFT_ARROW)) {
             this.heading -= 0.08;
         }
@@ -24,6 +25,7 @@ export class Ship {
         }
         if (this.p.keyIsDown(this.p.UP_ARROW)) {
             this.velocity.add(p5.Vector.fromAngle(this.heading - this.p.HALF_PI).mult(0.12));
+            thrusting = true;
         }
 
         this.position.add(this.velocity);
@@ -32,6 +34,7 @@ export class Ship {
         this.position.y = (this.position.y + this.p.height) % this.p.height;
         this.fireCooldown = Math.max(0, this.fireCooldown - 1);
         this.invulnerability = Math.max(0, this.invulnerability - 1);
+        return thrusting;
     }
 
     shoot(): Projectile | undefined {
