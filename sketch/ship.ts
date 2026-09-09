@@ -15,7 +15,7 @@ export class Ship {
         this.respawn();
     }
 
-    update(): Projectile | undefined {
+    update(): void {
         if (this.p.keyIsDown(this.p.LEFT_ARROW)) {
             this.heading -= 0.08;
         }
@@ -32,8 +32,10 @@ export class Ship {
         this.position.y = (this.position.y + this.p.height) % this.p.height;
         this.fireCooldown = Math.max(0, this.fireCooldown - 1);
         this.invulnerability = Math.max(0, this.invulnerability - 1);
+    }
 
-        if (this.p.keyIsDown(32) && this.fireCooldown === 0) {
+    shoot(): Projectile | undefined {
+        if (this.fireCooldown === 0) {
             this.fireCooldown = 10;
             const direction = p5.Vector.fromAngle(this.heading - this.p.HALF_PI);
             const bulletPosition = p5.Vector.add(this.position, direction.copy().mult(this.radius + 4));

@@ -25,7 +25,10 @@ const sketch = (p: p5) => {
 
     p.setup = () => {
         document.body.style.margin = "0";
-        p.createCanvas(p.windowWidth, p.windowHeight);
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+        const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+        canvas.style("display", "block");
         p.frameRate(60);
 
         attractor = new Ball(p, p.width / 2, p.height / 2, p.createVector(), 2000, 26, [255, 204, 77], true);
@@ -33,6 +36,23 @@ const sketch = (p: p5) => {
         addOrbitingBody(185, 1.48, 9, [255, 112, 112]);
         addOrbitingBody(270, 1.22, 6, [161, 241, 157]);
         ship = new Ship(p);
+    };
+
+    p.windowResized = () => {
+        p.resizeCanvas(p.windowWidth, p.windowHeight);
+    };
+
+    p.keyPressed = () => {
+        if (p.keyCode === 32) {
+            const projectile = ship.shoot();
+            if (projectile) {
+                projectiles.push(projectile);
+            }
+        }
+
+        if ([32, p.LEFT_ARROW, p.RIGHT_ARROW, p.UP_ARROW].includes(p.keyCode)) {
+            return false;
+        }
     };
 
     p.mousePressed = () => {
@@ -62,10 +82,7 @@ const sketch = (p: p5) => {
         bodies.forEach((body) => body.applyGravity(allBodies));
         bodies.forEach((body) => body.move());
 
-        const projectile = ship.update();
-        if (projectile) {
-            projectiles.push(projectile);
-        }
+        ship.update();
 
         for (let index = bodies.length - 1; index >= 0; index--) {
             const body = bodies[index];
